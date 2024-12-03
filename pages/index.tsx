@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { createPortal } from 'react-dom'
 
@@ -8,12 +8,34 @@ import { UploadSvg } from '@/components/svg/upload-svg'
 import { TriangleDownSvg } from '@/components/svg/triangle-down-svg'
 import { font } from '@/pages/_app'
 import { SolanaLogoSvg } from '@/components/svg/solana-logo-svg'
+import { DEFAULT_TOKEN_INFO, type TokenInfo } from '@/model/token-info'
 
 export default function Home() {
+  const [mount, setMount] = React.useState(false)
+  const [token, setToken] = React.useState<TokenInfo>(DEFAULT_TOKEN_INFO)
   const [showMoreOptions, setShowMoreOptions] = React.useState(false)
   const [showBuyModal, setShowBuyModal] = React.useState(false)
 
   const { publicKey, signTransaction, connected } = useWallet()
+
+  // do once
+  useEffect(
+    () => {
+      const token = localStorage.getItem('token')
+      if (token) {
+        setToken(JSON.parse(token))
+      }
+      setMount(true)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+
+  useEffect(() => {
+    if (mount) {
+      localStorage.setItem('token', JSON.stringify(token))
+    }
+  }, [mount, token])
 
   return (
     <div className="flex flex-col w-full items-center">
@@ -39,8 +61,15 @@ export default function Home() {
                     </div>
                     <div className="w-full flex relative">
                       <input
+                        value={token.buyAmount}
+                        onChange={(e) => {
+                          setToken((prev) => ({
+                            ...prev,
+                            buyAmount: parseFloat((e.target as any).value),
+                          }))
+                        }}
                         placeholder="0.0"
-                        className="h-12 placeholder:text-white w-full px-6 py-[18px] bg-[#dfecff]/30 rounded-2xl justify-start items-start gap-2.5 inline-flex"
+                        className="h-12 placeholder:text-white text-white w-full px-6 py-[18px] bg-[#dfecff]/30 rounded-2xl justify-start items-start gap-2.5 inline-flex"
                       />
                       <div className="flex mr-auto absolute top-2.5 right-4 items-center text-white justify-center gap-2">
                         <SolanaLogoSvg />
@@ -110,6 +139,13 @@ export default function Home() {
             Mine your own address
           </div>
           <input
+            value={token.postfix}
+            onChange={(e) => {
+              setToken((prev) => ({
+                ...prev,
+                postfix: (e.target as any).value,
+              }))
+            }}
             placeholder="Input the last digits or alphabets of the address (up to 7 digits)"
             className="placeholder:tracking-wide placeholder:font-semibold placeholder:text-white text-white text-sm self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex"
           />
@@ -137,7 +173,16 @@ export default function Home() {
           <div className="self-stretch text-white text-base font-bold tracking-wide">
             Token name
           </div>
-          <input className="text-white text-sm font-semibold self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex" />
+          <input
+            value={token.name}
+            onChange={(e) => {
+              setToken((prev) => ({
+                ...prev,
+                name: (e.target as any).value,
+              }))
+            }}
+            className="text-white text-sm font-semibold self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex"
+          />
         </div>
 
         {/*ticker*/}
@@ -145,7 +190,16 @@ export default function Home() {
           <div className="self-stretch text-white text-base font-bold tracking-wide">
             Ticker
           </div>
-          <input className="text-white text-sm font-semibold self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex" />
+          <input
+            value={token.ticker}
+            onChange={(e) => {
+              setToken((prev) => ({
+                ...prev,
+                ticker: (e.target as any).value,
+              }))
+            }}
+            className="text-white text-sm font-semibold self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex"
+          />
         </div>
 
         {/*description*/}
@@ -153,7 +207,16 @@ export default function Home() {
           <div className="self-stretch text-white text-base font-bold tracking-wide">
             Description
           </div>
-          <textarea className="h-32 text-white text-sm font-semibold self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex" />
+          <textarea
+            value={token.description}
+            onChange={(e) => {
+              setToken((prev) => ({
+                ...prev,
+                description: (e.target as any).value,
+              }))
+            }}
+            className="h-32 text-white text-sm font-semibold self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex"
+          />
         </div>
 
         {/*video or image*/}
@@ -195,6 +258,13 @@ export default function Home() {
                 Twitter
               </div>
               <input
+                value={token.twitter}
+                onChange={(e) => {
+                  setToken((prev) => ({
+                    ...prev,
+                    twitter: (e.target as any).value,
+                  }))
+                }}
                 placeholder="(optional)"
                 className="placeholder:font-bold placeholder:text-white text-white text-sm font-semibold self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex"
               />
@@ -206,6 +276,13 @@ export default function Home() {
                 Telegram
               </div>
               <input
+                value={token.telegram}
+                onChange={(e) => {
+                  setToken((prev) => ({
+                    ...prev,
+                    telegram: (e.target as any).value,
+                  }))
+                }}
                 placeholder="(optional)"
                 className="placeholder:font-bold placeholder:text-white text-white text-sm font-semibold self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex"
               />
@@ -217,6 +294,13 @@ export default function Home() {
                 Website
               </div>
               <input
+                value={token.website}
+                onChange={(e) => {
+                  setToken((prev) => ({
+                    ...prev,
+                    website: (e.target as any).value,
+                  }))
+                }}
                 placeholder="(optional)"
                 className="placeholder:font-bold placeholder:text-white text-white text-sm font-semibold self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex"
               />
