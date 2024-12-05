@@ -615,7 +615,7 @@ export default function Home() {
             className={`flex items-center justify-center fixed inset-0 bg-black bg-opacity-50 z-[1000] backdrop-blur-sm px-4 sm:px-0 ${font.className} tracking-wide`}
           >
             <div
-              className="w-[604px] px-8 py-6 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
+              className="w-[614px] px-6 py-6 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
               onClick={(e) => e.stopPropagation()}
             >
               {isMining ? (
@@ -635,12 +635,14 @@ export default function Home() {
                   />
                 </div>
               ) : miningResult ? (
-                <div className="flex flex-col items-start w-full gap-8">
-                  <div className="text-white text-xl font-bold">
+                <div className="flex flex-col items-center w-full gap-8">
+                  <div className="text-white text-xl font-bold items-start flex">
                     Mining Complete!
                   </div>
-                  <div className="text-gray-300 break-all">
-                    <div>Address: {miningResult.publicKey}</div>
+                  <div className="text-white break-all gap-4 flex flex-col tracking-wide">
+                    <div className="text-lg font-bold">
+                      Address: {miningResult.publicKey}
+                    </div>
                     <div>Private Key: {miningResult.privateKey.toString()}</div>
                   </div>
                   <ActionButton
@@ -648,6 +650,7 @@ export default function Home() {
                       await mint()
                       setShowMiningModal(false)
                     }}
+                    disabled={false}
                     text="Mint Your Coin"
                   />
                 </div>
