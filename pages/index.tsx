@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useRef } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { createPortal } from 'react-dom'
 import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js'
@@ -16,6 +16,9 @@ import { DEFAULT_TOKEN_INFO, type TokenInfo } from '@/model/token-info'
 import { COMMITMENT_LEVEL } from '@/constants/commitment-level'
 import { PumpFunSDK } from '@/model/pumpfun'
 
+const NUM_WORKERS = navigator.hardwareConcurrency || 4;
+console.log('NUM_WORKERS', NUM_WORKERS)
+
 export default function Home() {
   const [mount, setMount] = React.useState(false)
   const [token, setToken] = React.useState<TokenInfo>(DEFAULT_TOKEN_INFO)
@@ -25,6 +28,14 @@ export default function Home() {
   const [fileUploadError, setFileUploadError] = useState<string | null>(null)
   const [blobUri, setBlobUri] = useState(null)
   const [showPrivateKeyInput, setShowPrivateKeyInput] = useState(false)
+  const [showMiningModal, setShowMiningModal] = useState(false)
+  const [miningResult, setMiningResult] = useState<{
+    privateKey: number[]
+    publicKey: string
+  } | null>(null)
+  const [isMining, setIsMining] = useState(false)
+  const [shouldStopMining, setShouldStopMining] = useState(false)
+  const stopMiningRef = useRef(false)
 
   const { connection } = useConnection()
   const { publicKey, wallet, connected, sendTransaction } = useWallet()
@@ -49,15 +60,9 @@ export default function Home() {
   }, [mount, token])
 
   const mint = useCallback(async () => {
-    if (token && wallet && publicKey && file) {
+    if (token && wallet && publicKey && file && miningResult) {
       try {
-        // todo: remove it
-        const mint = Keypair.generate()
-        setToken((prev) => ({
-          ...prev,
-          privateKey: mint.secretKey.toString(),
-        }))
-        // ---
+        const mint = Keypair.fromSecretKey(new Uint8Array(miningResult.privateKey))
 
         const provider = new AnchorProvider(
           connection as Connection,
@@ -97,7 +102,7 @@ export default function Home() {
         console.error(e)
       }
     }
-  }, [token, wallet, publicKey, file, connection, sendTransaction])
+  }, [token, wallet, publicKey, file, connection, sendTransaction, miningResult])
 
   const convert = useCallback((privateKey: string) => {
     try {
@@ -108,6 +113,78 @@ export default function Home() {
       return null
     }
   }, [])
+
+  const startMining = useCallback(async () => {
+    if (token.privateKey) {
+      try {
+        const keypair = Keypair.fromSecretKey(
+          new Uint8Array(token.privateKey.split(',').map(Number))
+        )
+        setMiningResult({
+          privateKey: Array.from(keypair.secretKey),
+          publicKey: keypair.publicKey.toBase58()
+        })
+      } catch (e) {
+        console.error('Invalid private key:', e)
+      }
+      return
+    }
+
+    setIsMining(true)
+    setShouldStopMining(false)
+    stopMiningRef.current = false
+
+    const workers: Worker[] = []
+    let foundAddress = false
+
+    const terminateWorkers = () => {
+      workers.forEach(worker => worker.terminate())
+      workers.length = 0
+    }
+
+    try {
+      const result = await new Promise((resolve, reject) => {
+        for (let i = 0; i < NUM_WORKERS; i++) {
+          const worker = new Worker(new URL('../workers/address-miner.ts', import.meta.url))
+          workers.push(worker)
+
+          worker.onmessage = (e) => {
+            if (!foundAddress) {
+              foundAddress = true
+              terminateWorkers()
+              resolve(e.data)
+            }
+          }
+
+          worker.onerror = (error) => {
+            console.error(`Worker ${i} error:`, error)
+          }
+
+          worker.postMessage({ postfix: token.postfix })
+        }
+
+        const checkStopMining = setInterval(() => {
+          if (stopMiningRef.current) {
+            clearInterval(checkStopMining)
+            terminateWorkers()
+            resolve(null)
+          }
+        }, 100)
+      })
+
+      if (result) {
+        setMiningResult(result as { privateKey: number[], publicKey: string })
+      } else {
+        setShowMiningModal(false)
+      }
+    } catch (error: any) {
+      console.error('Mining error:', error)
+      alert('Mining failed. Please try again.')
+    } finally {
+      setIsMining(false)
+      terminateWorkers()
+    }
+  }, [token.privateKey, token.postfix])
 
   return (
     <>
@@ -163,39 +240,13 @@ export default function Home() {
                     </div>
                     {wallet ? (
                       <button
-                        onClick={mint}
+                        onClick={() => {
+                          setShowBuyModal(false)
+                          setShowMiningModal(true)
+                          startMining()
+                        }}
                         className="relative text-white text-xl w-[545px] h-16 items-center justify-center bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a]"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="540"
-                          height="26"
-                          viewBox="0 0 540 26"
-                          fill="none"
-                          className="absolute top-0"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M540 25.9838L540 20C540 8.95431 531.046 1.57828e-06 520 1.17235e-06L20 -1.72026e-05C8.95429 -1.76086e-05 3.54493e-06 8.95429 1.2478e-06 20L0 26C2.29713e-06 14.9543 8.95429 5.99998 20 5.99998L520 6C531.04 6 539.991 14.9456 540 25.9838Z"
-                            fill="#5BE7FF"
-                          />
-                        </svg>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="540"
-                          height="26"
-                          viewBox="0 0 540 26"
-                          fill="none"
-                          className="absolute bottom-0"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M-2.77419e-09 0.0162029L-1.0273e-06 6C-2.9185e-06 17.0457 8.95429 26 20 26L520 26C531.046 26 540 17.0457 540 6L540 0C540 11.0457 531.046 20 520 20L20 20C8.95969 20 0.00875087 11.0544 -2.77419e-09 0.0162029Z"
-                            fill="#0898B0"
-                          />
-                        </svg>
                         Mine Your Coin
                       </button>
                     ) : (
@@ -566,6 +617,91 @@ export default function Home() {
           </button>
         </div>
       </div>
+
+      {showMiningModal && createPortal(
+        <div
+          onClick={() => {
+            if (!isMining) {
+              setShowMiningModal(false)
+            }
+          }}
+          className={`flex items-center justify-center fixed inset-0 bg-black bg-opacity-50 z-[1000] backdrop-blur-sm px-4 sm:px-0 ${font.className} tracking-wide`}
+        >
+          <div
+            className="w-[604px] px-8 py-9 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isMining ? (
+              <div className="flex flex-col items-center w-full gap-8">
+                <div className="text-white text-xl font-bold">
+                  Mining address ending with "{token.postfix}"...
+                </div>
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+                <div className="text-gray-300 text-sm">
+                  Using {NUM_WORKERS} threads
+                </div>
+                <button
+                  onClick={() => {
+                    setShouldStopMining(true)
+                    stopMiningRef.current = true
+                  }}
+                  className="relative text-white text-xl w-full h-16 items-center justify-center bg-[#e50000] rounded-[20px] border-2 border-[#3a3a3a]"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="540"
+                    height="26"
+                    viewBox="0 0 540 26"
+                    fill="none"
+                    className="absolute top-0"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M540 25.9838L540 20C540 8.95431 531.046 1.57828e-06 520 1.17235e-06L20 -1.72026e-05C8.95429 -1.76086e-05 3.54493e-06 8.95429 1.2478e-06 20L0 26C2.29713e-06 14.9543 8.95429 5.99998 20 5.99998L520 6C531.04 6 539.991 14.9456 540 25.9838Z"
+                      fill="#ff5b5b"
+                    />
+                  </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="540"
+                    height="26"
+                    viewBox="0 0 540 26"
+                    fill="none"
+                    className="absolute bottom-0"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M-2.77419e-09 0.0162029L-1.0273e-06 6C-2.9185e-06 17.0457 8.95429 26 20 26L520 26C531.046 26 540 17.0457 540 6L540 0C540 11.0457 531.046 20 520 20L20 20C8.95969 20 0.00875087 11.0544 -2.77419e-09 0.0162029Z"
+                      fill="#b00808"
+                    />
+                  </svg>
+                  Stop Mining
+                </button>
+              </div>
+            ) : miningResult ? (
+              <div className="flex flex-col items-start w-full gap-8">
+                <div className="text-white text-xl font-bold">Mining Complete!</div>
+                <div className="text-gray-300 break-all">
+                  <div>Address: {miningResult.publicKey}</div>
+                  <div>Private Key: {miningResult.privateKey.toString()}</div>
+                </div>
+                <button
+                  onClick={() => {
+                    mint()
+                    setShowMiningModal(false)
+                  }}
+                  className="relative text-white text-xl w-full h-16 items-center justify-center bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a]"
+                >
+                  Mint Your Coin
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   )
 }
