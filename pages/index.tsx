@@ -19,19 +19,19 @@ import { PumpFunSDK } from '@/model/pumpfun'
 export default function Home() {
   const [mount, setMount] = React.useState(false)
   const [token, setToken] = React.useState<TokenInfo>(DEFAULT_TOKEN_INFO)
+  const [file, setFile] = useState<Blob | null>(null)
+  const [blobUri, setBlobUri] = useState(null)
+
   const [showMoreOptions, setShowMoreOptions] = React.useState(false)
   const [showBuyModal, setShowBuyModal] = React.useState(false)
-  const [file, setFile] = useState<Blob | null>(null)
-  const [fileUploadError, setFileUploadError] = useState<string | null>(null)
-  const [blobUri, setBlobUri] = useState(null)
   const [showPrivateKeyInput, setShowPrivateKeyInput] = useState(false)
   const [showMiningModal, setShowMiningModal] = useState(false)
+
   const [miningResult, setMiningResult] = useState<{
     privateKey: number[]
     publicKey: string
   } | null>(null)
   const [isMining, setIsMining] = useState(false)
-  const [shouldStopMining, setShouldStopMining] = useState(false)
   const stopMiningRef = useRef(false)
   const [numWorkers, setNumWorkers] = useState(4)
 
@@ -143,7 +143,6 @@ export default function Home() {
     }
 
     setIsMining(true)
-    setShouldStopMining(false)
     stopMiningRef.current = false
 
     const workers: Worker[] = []
@@ -155,7 +154,7 @@ export default function Home() {
     }
 
     try {
-      const result = await new Promise((resolve, reject) => {
+      const result = await new Promise((resolve) => {
         for (let i = 0; i < numWorkers; i++) {
           const worker = new Worker(
             new URL('../workers/address-miner.ts', import.meta.url),
@@ -334,7 +333,7 @@ export default function Home() {
                   }}
                   className="text-cyan-500 text-sm justify-end items-end font-semibold"
                 >
-                  Advance(optional)
+                  {showPrivateKeyInput ? 'Basic' : 'Advance(optional)'}
                 </button>
               </div>
               <textarea
@@ -342,6 +341,7 @@ export default function Home() {
                 onChange={(e) => {
                   setToken((prev) => ({
                     ...prev,
+                    postfix: '',
                     privateKey: (e.target as any).value,
                   }))
                 }}
@@ -384,6 +384,7 @@ export default function Home() {
                   setToken((prev) => ({
                     ...prev,
                     postfix: (e.target as any).value,
+                    privateKey: '',
                   }))
                 }}
                 placeholder="Input the last digits or alphabets of the address (up to 7 digits)"
@@ -650,7 +651,7 @@ export default function Home() {
               {isMining ? (
                 <div className="flex flex-col items-center w-full gap-8">
                   <div className="text-white text-xl font-bold">
-                    Mining address ending with "{token.postfix}"...
+                    Mining address ending with &quot;{token.postfix}&quot;...
                   </div>
                   <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
                   <div className="text-gray-300 text-sm">
@@ -658,7 +659,6 @@ export default function Home() {
                   </div>
                   <button
                     onClick={() => {
-                      setShouldStopMining(true)
                       stopMiningRef.current = true
                     }}
                     className="relative text-white text-xl w-full h-16 items-center justify-center bg-[#e50000] rounded-[20px] border-2 border-[#3a3a3a]"
