@@ -18,7 +18,7 @@ export default function Document() {
         />
         <meta
           property="og:image"
-          content="width=device-width,initial-scale=1,maximum-scale=1,https://solbound.fun/twitter-card.png"
+          content="https://solbound.fun/twitter-card.png"
         />
 
         {/* <!-- Twitter Meta Tags --> */}
@@ -31,7 +31,7 @@ export default function Document() {
         />
         <meta
           name="twitter:image"
-          content="width=device-width,initial-scale=1,maximum-scale=1,https://solbound.fun/twitter-card.png"
+          content="https://solbound.fun/twitter-card.png"
         />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-93643B0CS0"
