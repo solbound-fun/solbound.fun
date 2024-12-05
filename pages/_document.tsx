@@ -24,7 +24,7 @@ export default function Document() {
         />
         <meta
           property="og:image"
-          content="https://solbound.fun/twitter-card.png"
+          content="https://solbound.fun/twitter-card-v2.png"
         />
 
         {/* <!-- Twitter Meta Tags --> */}
@@ -37,7 +37,7 @@ export default function Document() {
         />
         <meta
           name="twitter:image"
-          content="https://solbound.fun/twitter-card.png"
+          content="https://solbound.fun/twitter-card-v2.png"
         />
       </Head>
       <body>
