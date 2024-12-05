@@ -5,6 +5,7 @@ import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { AnchorProvider, Wallet } from '@coral-xyz/anchor'
 import { FileUploader } from 'react-drag-drop-files'
 import Image from 'next/image'
+import Link from 'next/link'
 
 import { LogoSvg } from '@/components/svg/logo-svg'
 import { WalletButton } from '@/components/button/wallet-button'
@@ -34,8 +35,10 @@ export default function Home() {
     publicKey: string
   } | null>(null)
   const [isMining, setIsMining] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
   const stopMiningRef = useRef(false)
   const [numWorkers, setNumWorkers] = useState(4)
+  const [signature, setSignature] = useState<string | null>(null)
 
   const { connection } = useConnection()
   const { publicKey, wallet, connected, sendTransaction } = useWallet()
@@ -63,7 +66,7 @@ export default function Home() {
     setNumWorkers(navigator.hardwareConcurrency || 4)
   }, [])
 
-  const mint = useCallback(async () => {
+  const create = useCallback(async () => {
     if (token && wallet && publicKey && file && miningResult) {
       try {
         const mint = Keypair.fromSecretKey(
@@ -98,12 +101,7 @@ export default function Home() {
         const signature = await sendTransaction(transaction, connection, {
           signers: [mint],
         })
-        console.log('signature', signature)
-        window.open(
-          `https://pump.fun/coin/${mint.publicKey.toBase58()}`,
-          '_blank',
-          'noopener,noreferrer',
-        )
+        setSignature(signature)
       } catch (e) {
         console.error(e)
       }
@@ -619,11 +617,11 @@ export default function Home() {
               onClick={(e) => e.stopPropagation()}
             >
               {isMining ? (
-                <div className="flex flex-col items-center w-full gap-8">
+                <div className="flex flex-col items-center w-full gap-8 relative">
                   <div className="text-white text-xl font-bold">
                     Mining address ending with &quot;{token.postfix}&quot;...
                   </div>
-                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white" />
                   <div className="text-gray-300 text-sm">
                     Using {numWorkers} threads
                   </div>
@@ -639,19 +637,45 @@ export default function Home() {
                   <div className="text-white text-xl font-bold items-start flex">
                     Mining Complete!
                   </div>
-                  <div className="text-white break-all gap-4 flex flex-col tracking-wide">
-                    <div className="text-lg font-bold">
-                      Address: {miningResult.publicKey}
+                  {isCreating ? (
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white" />
+                  ) : (
+                    <div className="text-white break-all gap-4 flex flex-col tracking-wide">
+                      <div className="text-lg font-bold">
+                        Address: {miningResult.publicKey}
+                      </div>
+                      <div>
+                        Private Key: {miningResult.privateKey.toString()}
+                      </div>
                     </div>
-                    <div>Private Key: {miningResult.privateKey.toString()}</div>
-                  </div>
+                  )}
+                  {signature ? (
+                    <Link
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`https://solscan.io/tx/${signature}`}
+                      className="absolute top-[218px] left-6 text-cyan-500"
+                    >
+                      Successfully Created!{'  '}
+                      <span className="underline">View on Solscan</span>
+                    </Link>
+                  ) : (
+                    <></>
+                  )}
                   <ActionButton
                     onClick={async () => {
-                      await mint()
-                      setShowMiningModal(false)
+                      if (signature) {
+                        window.location.replace(
+                          `https://pump.fun/coin/${miningResult?.publicKey ?? ''}`,
+                        )
+                      } else {
+                        setIsCreating(true)
+                        await create()
+                        setIsCreating(false)
+                      }
                     }}
                     disabled={false}
-                    text="Mint Your Coin"
+                    text={signature ? 'Trade on Pump.fun!' : 'Mint Your Coin'}
                   />
                 </div>
               ) : null}
