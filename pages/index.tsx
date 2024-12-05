@@ -297,7 +297,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            // postfix
+            // prefix
             <div className="self-stretch flex-col justify-start items-start gap-2 flex">
               <div className="flex flex-row gap-2">
                 <div className="self-stretch text-white text-base font-bold tracking-wide">
@@ -313,14 +313,14 @@ export default function Home() {
                 </button>
               </div>
               <input
-                value={token.postfix}
+                value={token.prefix}
                 onChange={(e) => {
                   setToken((prev) => ({
                     ...prev,
-                    postfix: (e.target as any).value,
+                    prefix: (e.target as any).value,
                   }))
                 }}
-                placeholder="Input the last digits or alphabets of the address (up to 7 digits)"
+                placeholder="Input the first digits or alphabets of the address (up to 7 digits)"
                 className="placeholder:tracking-wide placeholder:font-semibold placeholder:text-white text-white text-sm self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex"
               />
               <div>
@@ -334,7 +334,7 @@ export default function Home() {
                   , the token address will be{' '}
                 </span>
                 <span className="text-white text-sm font-normal tracking-wide">
-                  ‘e9az7...minefun’{' '}
+                  ‘minefun...e9az7’{' '}
                 </span>
                 <span className="text-gray-400 text-sm font-normal tracking-wide">
                   to pump.fun
@@ -400,6 +400,7 @@ export default function Home() {
               Image or Video
             </div>
             <FileUploader
+              types={['jpg', 'jpeg', 'png', 'gif', 'bmp', 'mp4', 'avi']}
               handleChange={(file: any) => {
                 if (file) {
                   setFile(file)
@@ -409,6 +410,9 @@ export default function Home() {
               }}
               name="file"
               maxSize={10}
+              onTypeError={(type: string) => {
+                setFileUploadError(`File type ${type} is not supported`)
+              }}
             >
               <div className="max-h-[300px] text-gray-200 text-sm font-semibold self-stretch p-6 bg-[#dfecff]/30 rounded-xl flex-col justify-center items-center gap-6 flex">
                 {blobUri ? (
@@ -419,6 +423,10 @@ export default function Home() {
                       fill
                       className="h-32 w-32"
                     />
+                  </div>
+                ) : fileUploadError ? (
+                  <div className="text-xl font-semibold tracking-wide">
+                    {fileUploadError}
                   </div>
                 ) : (
                   <>
@@ -510,7 +518,7 @@ export default function Home() {
 
           <button
             disabled={
-              token.postfix.length === 0 ||
+              token.prefix.length === 0 ||
               token.name.length === 0 ||
               token.ticker.length === 0 ||
               token.description.length === 0 ||
@@ -550,7 +558,7 @@ export default function Home() {
               />
             </svg>
             <div className="text-white text-xl font-bold tracking-wide">
-              {token.postfix.length === 0
+              {token.prefix.length === 0
                 ? 'Please input the address'
                 : token.name.length === 0
                   ? 'Please input the token name'
