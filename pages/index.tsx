@@ -5,6 +5,7 @@ import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { AnchorProvider, Wallet } from '@coral-xyz/anchor'
 import { FileUploader } from 'react-drag-drop-files'
 import Image from 'next/image'
+import Link from 'next/link'
 
 import { LogoSvg } from '@/components/svg/logo-svg'
 import { WalletButton } from '@/components/button/wallet-button'
@@ -22,8 +23,9 @@ export default function Home() {
   const [showMoreOptions, setShowMoreOptions] = React.useState(false)
   const [showBuyModal, setShowBuyModal] = React.useState(false)
   const [file, setFile] = useState<Blob | null>(null)
-  const [fileUploadError, setFileUploadError] = useState<string | null>(null)
   const [blobUri, setBlobUri] = useState(null)
+  const [mintAddress, setMintAddress] = useState<string | null>(null)
+  const [signature, setSignature] = useState<string | null>(null)
   const [showPrivateKeyInput, setShowPrivateKeyInput] = useState(false)
 
   const { connection } = useConnection()
@@ -87,12 +89,8 @@ export default function Home() {
         const signature = await sendTransaction(transaction, connection, {
           signers: [mint],
         })
-        console.log('signature', signature)
-        window.open(
-          `https://pump.fun/coin/${mint.publicKey.toBase58()}`,
-          '_blank',
-          'noopener,noreferrer',
-        )
+        setSignature(signature)
+        setMintAddress(mint.publicKey.toBase58())
       } catch (e) {
         console.error(e)
       }
@@ -126,7 +124,7 @@ export default function Home() {
                   className="w-[604px] h-full max-h-[360px] px-8 py-9 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex flex-col gap-12">
+                  <div className="flex flex-col gap-12 relative">
                     <div className="flex flex-col items-start gap-8 self-stretch">
                       <div className="flex flex-col items-start gap-6 self-stretch text-white text-xl font-bold">
                         Choose how many [{token.name}] you want to buy
@@ -160,10 +158,32 @@ export default function Home() {
                           SOL
                         </div>
                       </div>
+
+                      {signature ? (
+                        <Link
+                          target="_blank"
+                          rel="noreferrer"
+                          href={`https://solscan.io/tx/${signature}`}
+                          className="absolute top-48 text-cyan-500"
+                        >
+                          Create Successful! Click to view transaction
+                        </Link>
+                      ) : (
+                        <></>
+                      )}
                     </div>
+
                     {wallet ? (
                       <button
-                        onClick={mint}
+                        onClick={async () => {
+                          if (mintAddress) {
+                            window.location.replace(
+                              `https://pump.fun/coin/${mintAddress}`,
+                            )
+                          } else {
+                            await mint()
+                          }
+                        }}
                         className="relative text-white text-xl w-[545px] h-16 items-center justify-center bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a]"
                       >
                         <svg
@@ -196,7 +216,7 @@ export default function Home() {
                             fill="#0898B0"
                           />
                         </svg>
-                        Mine Your Coin
+                        {mintAddress ? 'Trade on Pump.fun!' : 'Mine Your Coin'}
                       </button>
                     ) : (
                       <WalletButton connected={connected} publicKey={publicKey}>
