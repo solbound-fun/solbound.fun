@@ -18,6 +18,8 @@ import { COMMITMENT_LEVEL } from '@/constants/commitment-level'
 import { PumpFunSDK } from '@/model/pumpfun'
 import { ActionButton } from '@/components/button/action-button'
 import { StopButton } from '@/components/button/stop-button'
+import { TwitterLogoSvg } from '@/components/svg/twitter-logo-svg'
+import { GithubLogoSvg } from '@/components/svg/github-logo-svg'
 
 export default function Home() {
   const [mount, setMount] = React.useState(false)
@@ -312,6 +314,26 @@ export default function Home() {
           <div className="flex gap-[10px] mr-auto">
             <img src="/logo.png" alt="logo" width={24} height={34} />
             <LogoSvg />
+          </div>
+          <div className="py-1 justify-start items-center gap-12 tracking-wide font-bold text-white flex flex-row">
+            <Link
+              target="_blank"
+              href="https://x.com/SolBoundFun"
+              rel="noreferrer"
+              className="flex flex-row gap-2"
+            >
+              <TwitterLogoSvg />
+              Twitter
+            </Link>
+            <Link
+              target="_blank"
+              href="https://github.com/solbound-fun/solbound.fun"
+              rel="noreferrer"
+              className="flex flex-row gap-2"
+            >
+              <GithubLogoSvg />
+              Github
+            </Link>
           </div>
           <div className="flex ml-auto">
             <WalletButton connected={connected} publicKey={publicKey} />
