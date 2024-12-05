@@ -16,9 +16,6 @@ import { DEFAULT_TOKEN_INFO, type TokenInfo } from '@/model/token-info'
 import { COMMITMENT_LEVEL } from '@/constants/commitment-level'
 import { PumpFunSDK } from '@/model/pumpfun'
 
-const NUM_WORKERS = navigator.hardwareConcurrency || 4;
-console.log('NUM_WORKERS', NUM_WORKERS)
-
 export default function Home() {
   const [mount, setMount] = React.useState(false)
   const [token, setToken] = React.useState<TokenInfo>(DEFAULT_TOKEN_INFO)
@@ -36,6 +33,7 @@ export default function Home() {
   const [isMining, setIsMining] = useState(false)
   const [shouldStopMining, setShouldStopMining] = useState(false)
   const stopMiningRef = useRef(false)
+  const [numWorkers, setNumWorkers] = useState(4);
 
   const { connection } = useConnection()
   const { publicKey, wallet, connected, sendTransaction } = useWallet()
@@ -58,6 +56,10 @@ export default function Home() {
       localStorage.setItem('token', JSON.stringify(token))
     }
   }, [mount, token])
+
+  useEffect(() => {
+    setNumWorkers(navigator.hardwareConcurrency || 4);
+  }, []);
 
   const mint = useCallback(async () => {
     if (token && wallet && publicKey && file && miningResult) {
@@ -144,7 +146,7 @@ export default function Home() {
 
     try {
       const result = await new Promise((resolve, reject) => {
-        for (let i = 0; i < NUM_WORKERS; i++) {
+        for (let i = 0; i < numWorkers; i++) {
           const worker = new Worker(new URL('../workers/address-miner.ts', import.meta.url))
           workers.push(worker)
 
@@ -184,7 +186,7 @@ export default function Home() {
       setIsMining(false)
       terminateWorkers()
     }
-  }, [token.privateKey, token.postfix])
+  }, [token.privateKey, token.postfix, numWorkers])
 
   return (
     <>
@@ -638,7 +640,7 @@ export default function Home() {
                 </div>
                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
                 <div className="text-gray-300 text-sm">
-                  Using {NUM_WORKERS} threads
+                  Using {numWorkers} threads
                 </div>
                 <button
                   onClick={() => {
