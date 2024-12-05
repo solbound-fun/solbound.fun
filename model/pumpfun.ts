@@ -9,6 +9,7 @@ import {
 import { Program, Provider } from '@coral-xyz/anchor'
 import {
   createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
 } from '@solana/spl-token'
@@ -21,6 +22,9 @@ import {
 
 import { CreateTokenMetadata, PriorityFee } from './types'
 import { IDL, PumpFun } from './IDL'
+
+import { FEE_PERCENT, FEE_RECIPIENT } from '@/constants/fee'
+import { applyPercent } from '@/utils/bigint'
 
 const PROGRAM_ID = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'
 const MPL_TOKEN_METADATA_PROGRAM_ID =
@@ -46,6 +50,7 @@ export class PumpFunSDK {
     slippageBasisPoints: bigint = 500n,
     priorityFees?: PriorityFee,
     commitment: Commitment = DEFAULT_COMMITMENT,
+    feePercent: number = FEE_PERCENT,
   ): Promise<Transaction> {
     const tokenMetadata = await this.createTokenMetadata(createTokenMetadata)
     const createTx = await this.getCreateInstructions(
@@ -72,6 +77,35 @@ export class PumpFunSDK {
         buyAmountWithSlippage,
       )
       newTx.add(buyTx)
+
+      const feeAmount = applyPercent(buyAmount, feePercent)
+      if (feeAmount > 0n) {
+        const [associatedSender, associatedReceiver] = await Promise.all([
+          getAssociatedTokenAddress(mint.publicKey, creator, false),
+          getAssociatedTokenAddress(
+            mint.publicKey,
+            new PublicKey(FEE_RECIPIENT),
+            false,
+          ),
+        ])
+
+        newTx.add(
+          createAssociatedTokenAccountInstruction(
+            creator,
+            associatedReceiver,
+            new PublicKey(FEE_RECIPIENT),
+            mint.publicKey,
+          ),
+        )
+        newTx.add(
+          createTransferInstruction(
+            associatedSender,
+            associatedReceiver,
+            creator,
+            feeAmount,
+          ),
+        )
+      }
     }
 
     newTx.add(

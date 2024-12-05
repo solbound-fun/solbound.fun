@@ -20,6 +20,7 @@ import { ActionButton } from '@/components/button/action-button'
 import { StopButton } from '@/components/button/stop-button'
 import { TwitterLogoSvg } from '@/components/svg/twitter-logo-svg'
 import { GithubLogoSvg } from '@/components/svg/github-logo-svg'
+import { FEE_PERCENT } from '@/constants/fee'
 
 export default function Home() {
   const [mount, setMount] = React.useState(false)
@@ -215,9 +216,12 @@ export default function Home() {
                 className={`flex items-center justify-center fixed inset-0 bg-black bg-opacity-50 z-[1000] backdrop-blur-sm px-4 sm:px-0 ${font.className} tracking-wide`}
               >
                 <div
-                  className="w-[604px] h-full max-h-[360px] px-8 py-9 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
+                  className="relative w-[604px] h-full max-h-[360px] px-8 py-9 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  <div className="absolute top-[238px] right-8 tracking-wide text-white">
+                    The fee will be {FEE_PERCENT}% of the tokens received.
+                  </div>
                   <div className="flex flex-col gap-12">
                     <div className="flex flex-col items-start gap-8 self-stretch">
                       <div className="flex flex-col items-start gap-6 self-stretch text-white text-xl font-bold">
