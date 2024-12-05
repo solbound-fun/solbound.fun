@@ -342,7 +342,7 @@ export default function Home() {
 
         <div className="flex items-center justify-center mt-10 mb-10 text-center text-white text-4xl font-normal tracking-wide">
           <img src="/ax-left.png" alt="ax-left" className="w-30 h-20" />
-          Mine your own SolBound Fun!
+          Mine your own Soul-bound Memecoin!
           <img src="/ax-right.png" alt="ax-right" className="w-30 h-20" />
         </div>
 
@@ -414,24 +414,24 @@ export default function Home() {
                     privateKey: '',
                   }))
                 }}
-                placeholder="Input the last digits or alphabets of the address (up to 7 digits)"
+                placeholder="Enter the last digits or letters for the address (up to 7 characters)."
                 className="placeholder:tracking-wide placeholder:font-semibold placeholder:text-white text-white text-sm self-stretch px-4 py-3.5 bg-[#dfecff]/30 rounded-xl flex-col justify-start items-start gap-2.5 flex"
               />
               <div>
                 <span className="text-gray-400 text-sm font-normal tracking-wide">
-                  If you input{' '}
+                  If you enter{' '}
                 </span>
                 <span className="text-white text-sm font-normal tracking-wide">
                   ‘minefun’
                 </span>
                 <span className="text-gray-400 text-sm font-normal tracking-wide">
-                  , the token address will be{' '}
+                  , the token address will be will appear as{' '}
                 </span>
                 <span className="text-white text-sm font-normal tracking-wide">
                   ‘e9az7...minefun’{' '}
                 </span>
                 <span className="text-gray-400 text-sm font-normal tracking-wide">
-                  to pump.fun
+                  on pump.fun
                 </span>
               </div>
             </div>
@@ -616,7 +616,7 @@ export default function Home() {
             }}
             text={
               token.postfix.length === 0 && token.privateKey.length === 0
-                ? 'Please input the postfix'
+                ? 'Please enter the postfix'
                 : token.name.length === 0
                   ? 'Please input the token name'
                   : token.ticker.length === 0
