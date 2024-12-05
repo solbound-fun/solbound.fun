@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { createPortal } from 'react-dom'
 import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { AnchorProvider, Wallet } from '@coral-xyz/anchor'
 import { FileUploader } from 'react-drag-drop-files'
 import Image from 'next/image'
+import Link from 'next/link'
 
 import { LogoSvg } from '@/components/svg/logo-svg'
 import { WalletButton } from '@/components/button/wallet-button'
@@ -15,16 +16,29 @@ import { SolanaLogoSvg } from '@/components/svg/solana-logo-svg'
 import { DEFAULT_TOKEN_INFO, type TokenInfo } from '@/model/token-info'
 import { COMMITMENT_LEVEL } from '@/constants/commitment-level'
 import { PumpFunSDK } from '@/model/pumpfun'
+import { ActionButton } from '@/components/button/action-button'
+import { StopButton } from '@/components/button/stop-button'
 
 export default function Home() {
   const [mount, setMount] = React.useState(false)
   const [token, setToken] = React.useState<TokenInfo>(DEFAULT_TOKEN_INFO)
+  const [file, setFile] = useState<Blob | null>(null)
+  const [blobUri, setBlobUri] = useState(null)
+
   const [showMoreOptions, setShowMoreOptions] = React.useState(false)
   const [showBuyModal, setShowBuyModal] = React.useState(false)
-  const [file, setFile] = useState<Blob | null>(null)
-  const [fileUploadError, setFileUploadError] = useState<string | null>(null)
-  const [blobUri, setBlobUri] = useState(null)
   const [showPrivateKeyInput, setShowPrivateKeyInput] = useState(false)
+  const [showMiningModal, setShowMiningModal] = useState(false)
+
+  const [miningResult, setMiningResult] = useState<{
+    privateKey: number[]
+    publicKey: string
+  } | null>(null)
+  const [isMining, setIsMining] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const stopMiningRef = useRef(false)
+  const [numWorkers, setNumWorkers] = useState(4)
+  const [signature, setSignature] = useState<string | null>(null)
 
   const { connection } = useConnection()
   const { publicKey, wallet, connected, sendTransaction } = useWallet()
@@ -48,16 +62,16 @@ export default function Home() {
     }
   }, [mount, token])
 
-  const mint = useCallback(async () => {
-    if (token && wallet && publicKey && file) {
+  useEffect(() => {
+    setNumWorkers(navigator.hardwareConcurrency || 4)
+  }, [])
+
+  const create = useCallback(async () => {
+    if (token && wallet && publicKey && file && miningResult) {
       try {
-        // todo: remove it
-        const mint = Keypair.generate()
-        setToken((prev) => ({
-          ...prev,
-          privateKey: mint.secretKey.toString(),
-        }))
-        // ---
+        const mint = Keypair.fromSecretKey(
+          new Uint8Array(miningResult.privateKey),
+        )
 
         const provider = new AnchorProvider(
           connection as Connection,
@@ -87,17 +101,20 @@ export default function Home() {
         const signature = await sendTransaction(transaction, connection, {
           signers: [mint],
         })
-        console.log('signature', signature)
-        window.open(
-          `https://pump.fun/coin/${mint.publicKey.toBase58()}`,
-          '_blank',
-          'noopener,noreferrer',
-        )
+        setSignature(signature)
       } catch (e) {
         console.error(e)
       }
     }
-  }, [token, wallet, publicKey, file, connection, sendTransaction])
+  }, [
+    token,
+    wallet,
+    publicKey,
+    file,
+    connection,
+    sendTransaction,
+    miningResult,
+  ])
 
   const convert = useCallback((privateKey: string) => {
     try {
@@ -108,6 +125,79 @@ export default function Home() {
       return null
     }
   }, [])
+
+  const startMining = useCallback(async () => {
+    if (token.privateKey) {
+      try {
+        const keypair = Keypair.fromSecretKey(
+          new Uint8Array(token.privateKey.split(',').map(Number)),
+        )
+        setMiningResult({
+          privateKey: Array.from(keypair.secretKey),
+          publicKey: keypair.publicKey.toBase58(),
+        })
+      } catch (e) {
+        console.error('Invalid private key:', e)
+      }
+      return
+    }
+
+    setIsMining(true)
+    stopMiningRef.current = false
+
+    const workers: Worker[] = []
+    let foundAddress = false
+
+    const terminateWorkers = () => {
+      workers.forEach((worker) => worker.terminate())
+      workers.length = 0
+    }
+
+    try {
+      const result = await new Promise((resolve) => {
+        for (let i = 0; i < numWorkers; i++) {
+          const worker = new Worker(
+            new URL('../workers/address-miner.ts', import.meta.url),
+          )
+          workers.push(worker)
+
+          worker.onmessage = (e) => {
+            if (!foundAddress) {
+              foundAddress = true
+              terminateWorkers()
+              resolve(e.data)
+            }
+          }
+
+          worker.onerror = (error) => {
+            console.error(`Worker ${i} error:`, error)
+          }
+
+          worker.postMessage({ postfix: token.postfix })
+        }
+
+        const checkStopMining = setInterval(() => {
+          if (stopMiningRef.current) {
+            clearInterval(checkStopMining)
+            terminateWorkers()
+            resolve(null)
+          }
+        }, 100)
+      })
+
+      if (result) {
+        setMiningResult(result as { privateKey: number[]; publicKey: string })
+      } else {
+        setShowMiningModal(false)
+      }
+    } catch (error: any) {
+      console.error('Mining error:', error)
+      alert('Mining failed. Please try again.')
+    } finally {
+      setIsMining(false)
+      terminateWorkers()
+    }
+  }, [token.privateKey, token.postfix, numWorkers])
 
   return (
     <>
@@ -162,42 +252,14 @@ export default function Home() {
                       </div>
                     </div>
                     {wallet ? (
-                      <button
-                        onClick={mint}
-                        className="relative text-white text-xl w-[545px] h-16 items-center justify-center bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a]"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="540"
-                          height="26"
-                          viewBox="0 0 540 26"
-                          fill="none"
-                          className="absolute top-0"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M540 25.9838L540 20C540 8.95431 531.046 1.57828e-06 520 1.17235e-06L20 -1.72026e-05C8.95429 -1.76086e-05 3.54493e-06 8.95429 1.2478e-06 20L0 26C2.29713e-06 14.9543 8.95429 5.99998 20 5.99998L520 6C531.04 6 539.991 14.9456 540 25.9838Z"
-                            fill="#5BE7FF"
-                          />
-                        </svg>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="540"
-                          height="26"
-                          viewBox="0 0 540 26"
-                          fill="none"
-                          className="absolute bottom-0"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M-2.77419e-09 0.0162029L-1.0273e-06 6C-2.9185e-06 17.0457 8.95429 26 20 26L520 26C531.046 26 540 17.0457 540 6L540 0C540 11.0457 531.046 20 520 20L20 20C8.95969 20 0.00875087 11.0544 -2.77419e-09 0.0162029Z"
-                            fill="#0898B0"
-                          />
-                        </svg>
-                        Mine Your Coin
-                      </button>
+                      <ActionButton
+                        onClick={() => {
+                          setShowBuyModal(false)
+                          setShowMiningModal(true)
+                          startMining()
+                        }}
+                        text="Mine Your Coin"
+                      />
                     ) : (
                       <WalletButton connected={connected} publicKey={publicKey}>
                         <div className="flex relative text-white text-xl w-[545px] h-16 items-center justify-center bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a]">
@@ -269,7 +331,7 @@ export default function Home() {
                   }}
                   className="text-cyan-500 text-sm justify-end items-end font-semibold"
                 >
-                  Advance(optional)
+                  {showPrivateKeyInput ? 'Basic' : 'Advance(optional)'}
                 </button>
               </div>
               <textarea
@@ -277,6 +339,7 @@ export default function Home() {
                 onChange={(e) => {
                   setToken((prev) => ({
                     ...prev,
+                    postfix: '',
                     privateKey: (e.target as any).value,
                   }))
                 }}
@@ -319,6 +382,7 @@ export default function Home() {
                   setToken((prev) => ({
                     ...prev,
                     postfix: (e.target as any).value,
+                    privateKey: '',
                   }))
                 }}
                 placeholder="Input the last digits or alphabets of the address (up to 7 digits)"
@@ -401,6 +465,7 @@ export default function Home() {
               Image or Video
             </div>
             <FileUploader
+              types={['jpg', 'jpeg', 'png', 'gif', 'bmp', 'mp4', 'avi']}
               handleChange={(file: any) => {
                 if (file) {
                   setFile(file)
@@ -509,7 +574,7 @@ export default function Home() {
             </>
           )}
 
-          <button
+          <ActionButton
             disabled={
               token.postfix.length === 0 ||
               token.name.length === 0 ||
@@ -520,38 +585,8 @@ export default function Home() {
             onClick={() => {
               setShowBuyModal(true)
             }}
-            className="group mt-4 flex h-16 w-[545px] items-center justify-center relative bg-[#00c4e5] disabled:bg-gray-400 disabled:text-gray-950 rounded-[20px] border-2 border-[#3a3a3a] disabled:border-gray-400"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="540"
-              height="26"
-              viewBox="0 0 540 26"
-              fill="none"
-              className="absolute top-0 flex fill-[#5BE7FF] group-disabled:fill-gray-300"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M540 25.9838L540 20C540 8.95431 531.046 1.57828e-06 520 1.17235e-06L20 -1.72026e-05C8.95429 -1.76086e-05 3.54493e-06 8.95429 1.2478e-06 20L0 26C2.29713e-06 14.9543 8.95429 5.99998 20 5.99998L520 6C531.04 6 539.991 14.9456 540 25.9838Z"
-              />
-            </svg>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="540"
-              height="26"
-              viewBox="0 0 540 26"
-              fill="none"
-              className="absolute bottom-0 flex fill-[#5BE7FF] group-disabled:fill-gray-300"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M-2.77419e-09 0.0162029L-1.0273e-06 6C-2.9185e-06 17.0457 8.95429 26 20 26L520 26C531.046 26 540 17.0457 540 6L540 0C540 11.0457 531.046 20 520 20L20 20C8.95969 20 0.00875087 11.0544 -2.77419e-09 0.0162029Z"
-              />
-            </svg>
-            <div className="text-white text-xl font-bold tracking-wide">
-              {token.postfix.length === 0
+            text={
+              token.postfix.length === 0
                 ? 'Please input the address'
                 : token.name.length === 0
                   ? 'Please input the token name'
@@ -561,11 +596,93 @@ export default function Home() {
                       ? 'Please input the description'
                       : file === null
                         ? 'Please upload the image or video'
-                        : 'Mine Your Coin'}
-            </div>
-          </button>
+                        : 'Mine Your Coin'
+            }
+          />
         </div>
       </div>
+
+      {showMiningModal &&
+        createPortal(
+          <div
+            onClick={() => {
+              if (!isMining) {
+                setShowMiningModal(false)
+              }
+            }}
+            className={`flex items-center justify-center fixed inset-0 bg-black bg-opacity-50 z-[1000] backdrop-blur-sm px-4 sm:px-0 ${font.className} tracking-wide`}
+          >
+            <div
+              className="w-[614px] px-6 py-6 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {isMining ? (
+                <div className="flex flex-col items-center w-full gap-8 relative">
+                  <div className="text-white text-xl font-bold">
+                    Mining address ending with &quot;{token.postfix}&quot;...
+                  </div>
+                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white" />
+                  <div className="text-gray-300 text-sm">
+                    Using {numWorkers} threads
+                  </div>
+                  <StopButton
+                    onClick={() => {
+                      stopMiningRef.current = true
+                    }}
+                    text="Stop Mining"
+                  />
+                </div>
+              ) : miningResult ? (
+                <div className="flex flex-col items-center w-full gap-8">
+                  <div className="text-white text-xl font-bold items-start flex">
+                    Mining Complete!
+                  </div>
+                  {isCreating ? (
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white" />
+                  ) : (
+                    <div className="text-white break-all gap-4 flex flex-col tracking-wide">
+                      <div className="text-lg font-bold">
+                        Address: {miningResult.publicKey}
+                      </div>
+                      <div>
+                        Private Key: {miningResult.privateKey.toString()}
+                      </div>
+                    </div>
+                  )}
+                  {signature ? (
+                    <Link
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`https://solscan.io/tx/${signature}`}
+                      className="absolute top-[218px] left-6 text-cyan-500"
+                    >
+                      Successfully Created!{'  '}
+                      <span className="underline">View on Solscan</span>
+                    </Link>
+                  ) : (
+                    <></>
+                  )}
+                  <ActionButton
+                    onClick={async () => {
+                      if (signature) {
+                        window.location.replace(
+                          `https://pump.fun/coin/${miningResult?.publicKey ?? ''}`,
+                        )
+                      } else {
+                        setIsCreating(true)
+                        await create()
+                        setIsCreating(false)
+                      }
+                    }}
+                    disabled={false}
+                    text={signature ? 'Trade on Pump.fun!' : 'Mint Your Coin'}
+                  />
+                </div>
+              ) : null}
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   )
 }
