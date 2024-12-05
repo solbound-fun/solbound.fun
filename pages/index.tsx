@@ -577,7 +577,7 @@ export default function Home() {
 
           <ActionButton
             disabled={
-              token.postfix.length === 0 ||
+              (token.postfix.length === 0 && token.privateKey.length === 0) ||
               token.name.length === 0 ||
               token.ticker.length === 0 ||
               token.description.length === 0 ||
@@ -587,8 +587,8 @@ export default function Home() {
               setShowBuyModal(true)
             }}
             text={
-              token.postfix.length === 0
-                ? 'Please input the address'
+              token.postfix.length === 0 && token.privateKey.length === 0
+                ? 'Please input the postfix'
                 : token.name.length === 0
                   ? 'Please input the token name'
                   : token.ticker.length === 0
