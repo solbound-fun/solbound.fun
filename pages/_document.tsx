@@ -1,65 +1,49 @@
 import React from 'react'
-import Document, {
-  DocumentContext,
-  Head,
-  Html,
-  Main,
-  NextScript,
-} from 'next/document'
-import { ServerStyleSheet } from 'styled-components'
-import Script from 'next/script'
+import { Html, Head, Main, NextScript } from 'next/document'
 
-class MyDocument extends Document {
-  static async getInitialProps(ctx: DocumentContext) {
-    const sheet = new ServerStyleSheet()
-    const originalRenderPage = ctx.renderPage
-    try {
-      ctx.renderPage = () =>
-        originalRenderPage({
-          enhanceApp: (App) => (props) =>
-            sheet.collectStyles(<App {...props} />),
-        })
+export default function Document() {
+  return (
+    <Html lang="en">
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <meta name="theme-color" content="#000" />
 
-      const initialProps = await Document.getInitialProps(ctx)
-      return {
-        ...initialProps,
-        styles: (
-          <>
-            {initialProps.styles}
-            {sheet.getStyleElement()}
-          </>
-        ),
-      }
-    } finally {
-      sheet.seal()
-    }
-  }
+        <title>solbound.fun</title>
+        <meta name="description" content="Mine your own Soul-bound Memecoin!" />
 
-  render() {
-    return (
-      <Html lang="en">
-        <Head>
-          <Script
-            src="https://www.googletagmanager.com/gtag/js?id=G-93643B0CS0"
-            strategy="afterInteractive"
-          />
-          <Script id="google-analytics" strategy="afterInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){window.dataLayer.push(arguments);}
-              gtag('js', new Date());
+        {/* <!-- Facebook Meta Tags --> */}
+        <meta property="og:url" content="https://solbound.fun/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="solbound.fun" />
+        <meta
+          property="og:description"
+          content="Mine your own Soul-bound Memecoin!"
+        />
+        <meta
+          property="og:image"
+          content="https://solbound.fun/twitter-card.png"
+        />
 
-              gtag('config', 'G-93643B0CS0');
-            `}
-          </Script>
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    )
-  }
+        {/* <!-- Twitter Meta Tags --> */}
+        <meta property="twitter:card" content="summary" />
+        <meta property="twitter:site" content="@SolBoundFun" />
+        <meta property="twitter:title" content="SolBoundFun" />
+        <meta
+          property="twitter:description"
+          content="Mine your own Soul-bound Memecoin!"
+        />
+        <meta
+          name="twitter:image"
+          content="https://solbound.fun/twitter-card.png"
+        />
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  )
 }
-
-export default MyDocument
