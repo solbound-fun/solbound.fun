@@ -28,7 +28,7 @@ export default function Document() {
         />
 
         {/* <!-- Twitter Meta Tags --> */}
-        <meta property="twitter:card" content="summary" />
+        <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:site" content="@SolBoundFun" />
         <meta property="twitter:title" content="SolBoundFun" />
         <meta
