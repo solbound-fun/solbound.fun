@@ -7,7 +7,8 @@ export type TokenInfo = {
   twitter: string
   telegram: string
   website: string
-  buyAmount: number
+  buyAmount: string
+  privateKey?: string
 }
 
 export const DEFAULT_TOKEN_INFO: TokenInfo = {
@@ -19,5 +20,5 @@ export const DEFAULT_TOKEN_INFO: TokenInfo = {
   twitter: '',
   telegram: '',
   website: '',
-  buyAmount: 0,
+  buyAmount: '0.0',
 }
