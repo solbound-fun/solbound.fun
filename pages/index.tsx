@@ -22,6 +22,7 @@ export default function Home() {
   const [showMoreOptions, setShowMoreOptions] = React.useState(false)
   const [showBuyModal, setShowBuyModal] = React.useState(false)
   const [file, setFile] = useState<Blob | null>(null)
+  const [fileUploadError, setFileUploadError] = useState<string | null>(null)
   const [blobUri, setBlobUri] = useState(null)
   const [showPrivateKeyInput, setShowPrivateKeyInput] = useState(false)
 
