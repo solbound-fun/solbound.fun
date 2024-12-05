@@ -1,5 +1,5 @@
 export type TokenInfo = {
-  prefix: string
+  postfix: string
   name: string
   ticker: string
   description: string
@@ -12,7 +12,7 @@ export type TokenInfo = {
 }
 
 export const DEFAULT_TOKEN_INFO: TokenInfo = {
-  prefix: '',
+  postfix: '',
   name: '',
   ticker: '',
   description: '',
