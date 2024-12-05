@@ -15,6 +15,8 @@ import { SolanaLogoSvg } from '@/components/svg/solana-logo-svg'
 import { DEFAULT_TOKEN_INFO, type TokenInfo } from '@/model/token-info'
 import { COMMITMENT_LEVEL } from '@/constants/commitment-level'
 import { PumpFunSDK } from '@/model/pumpfun'
+import { ActionButton } from '@/components/button/action-button'
+import { StopButton } from '@/components/button/stop-button'
 
 export default function Home() {
   const [mount, setMount] = React.useState(false)
@@ -252,16 +254,14 @@ export default function Home() {
                       </div>
                     </div>
                     {wallet ? (
-                      <button
+                      <ActionButton
                         onClick={() => {
                           setShowBuyModal(false)
                           setShowMiningModal(true)
                           startMining()
                         }}
-                        className="relative text-white text-xl w-[545px] h-16 items-center justify-center bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a]"
-                      >
-                        Mine Your Coin
-                      </button>
+                        text="Mine Your Coin"
+                      />
                     ) : (
                       <WalletButton connected={connected} publicKey={publicKey}>
                         <div className="flex relative text-white text-xl w-[545px] h-16 items-center justify-center bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a]">
@@ -576,7 +576,7 @@ export default function Home() {
             </>
           )}
 
-          <button
+          <ActionButton
             disabled={
               token.postfix.length === 0 ||
               token.name.length === 0 ||
@@ -587,38 +587,8 @@ export default function Home() {
             onClick={() => {
               setShowBuyModal(true)
             }}
-            className="group mt-4 flex h-16 w-[545px] items-center justify-center relative bg-[#00c4e5] disabled:bg-gray-400 disabled:text-gray-950 rounded-[20px] border-2 border-[#3a3a3a] disabled:border-gray-400"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="540"
-              height="26"
-              viewBox="0 0 540 26"
-              fill="none"
-              className="absolute top-0 flex fill-[#5BE7FF] group-disabled:fill-gray-300"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M540 25.9838L540 20C540 8.95431 531.046 1.57828e-06 520 1.17235e-06L20 -1.72026e-05C8.95429 -1.76086e-05 3.54493e-06 8.95429 1.2478e-06 20L0 26C2.29713e-06 14.9543 8.95429 5.99998 20 5.99998L520 6C531.04 6 539.991 14.9456 540 25.9838Z"
-              />
-            </svg>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="540"
-              height="26"
-              viewBox="0 0 540 26"
-              fill="none"
-              className="absolute bottom-0 flex fill-[#5BE7FF] group-disabled:fill-gray-300"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M-2.77419e-09 0.0162029L-1.0273e-06 6C-2.9185e-06 17.0457 8.95429 26 20 26L520 26C531.046 26 540 17.0457 540 6L540 0C540 11.0457 531.046 20 520 20L20 20C8.95969 20 0.00875087 11.0544 -2.77419e-09 0.0162029Z"
-              />
-            </svg>
-            <div className="text-white text-xl font-bold tracking-wide">
-              {token.postfix.length === 0
+            text={
+              token.postfix.length === 0
                 ? 'Please input the address'
                 : token.name.length === 0
                   ? 'Please input the token name'
@@ -628,9 +598,9 @@ export default function Home() {
                       ? 'Please input the description'
                       : file === null
                         ? 'Please upload the image or video'
-                        : 'Mine Your Coin'}
-            </div>
-          </button>
+                        : 'Mine Your Coin'
+            }
+          />
         </div>
       </div>
 
@@ -645,7 +615,7 @@ export default function Home() {
             className={`flex items-center justify-center fixed inset-0 bg-black bg-opacity-50 z-[1000] backdrop-blur-sm px-4 sm:px-0 ${font.className} tracking-wide`}
           >
             <div
-              className="w-[604px] px-8 py-9 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
+              className="w-[604px] px-8 py-6 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
               onClick={(e) => e.stopPropagation()}
             >
               {isMining ? (
@@ -657,44 +627,12 @@ export default function Home() {
                   <div className="text-gray-300 text-sm">
                     Using {numWorkers} threads
                   </div>
-                  <button
+                  <StopButton
                     onClick={() => {
                       stopMiningRef.current = true
                     }}
-                    className="relative text-white text-xl w-full h-16 items-center justify-center bg-[#e50000] rounded-[20px] border-2 border-[#3a3a3a]"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="540"
-                      height="26"
-                      viewBox="0 0 540 26"
-                      fill="none"
-                      className="absolute top-0"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M540 25.9838L540 20C540 8.95431 531.046 1.57828e-06 520 1.17235e-06L20 -1.72026e-05C8.95429 -1.76086e-05 3.54493e-06 8.95429 1.2478e-06 20L0 26C2.29713e-06 14.9543 8.95429 5.99998 20 5.99998L520 6C531.04 6 539.991 14.9456 540 25.9838Z"
-                        fill="#ff5b5b"
-                      />
-                    </svg>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="540"
-                      height="26"
-                      viewBox="0 0 540 26"
-                      fill="none"
-                      className="absolute bottom-0"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M-2.77419e-09 0.0162029L-1.0273e-06 6C-2.9185e-06 17.0457 8.95429 26 20 26L520 26C531.046 26 540 17.0457 540 6L540 0C540 11.0457 531.046 20 520 20L20 20C8.95969 20 0.00875087 11.0544 -2.77419e-09 0.0162029Z"
-                        fill="#b00808"
-                      />
-                    </svg>
-                    Stop Mining
-                  </button>
+                    text="Stop Mining"
+                  />
                 </div>
               ) : miningResult ? (
                 <div className="flex flex-col items-start w-full gap-8">
@@ -705,15 +643,13 @@ export default function Home() {
                     <div>Address: {miningResult.publicKey}</div>
                     <div>Private Key: {miningResult.privateKey.toString()}</div>
                   </div>
-                  <button
-                    onClick={() => {
-                      mint()
+                  <ActionButton
+                    onClick={async () => {
+                      await mint()
                       setShowMiningModal(false)
                     }}
-                    className="relative text-white text-xl w-full h-16 items-center justify-center bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a]"
-                  >
-                    Mint Your Coin
-                  </button>
+                    text="Mint Your Coin"
+                  />
                 </div>
               ) : null}
             </div>
