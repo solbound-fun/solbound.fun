@@ -340,6 +340,12 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="flex items-center justify-center mt-10 mb-10 text-center text-white text-4xl font-normal tracking-wide">
+          <img src="/ax-left.png" alt="ax-left" className="w-30 h-20" />
+          Mine your own SolBound Fun!
+          <img src="/ax-right.png" alt="ax-right" className="w-30 h-20" />
+        </div>
+
         <div className="mb-14 flex flex-col gap-4 px-5 py-6 h-fit w-[600px] bg-[#dfecff]/20 rounded-2xl backdrop-blur-[20px] justify-start items-start">
           {showPrivateKeyInput ? (
             // set privatekey
