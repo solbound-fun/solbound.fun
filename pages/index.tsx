@@ -401,6 +401,7 @@ export default function Home() {
               Image or Video
             </div>
             <FileUploader
+              types={['jpg', 'jpeg', 'png', 'gif', 'bmp', 'mp4', 'avi']}
               handleChange={(file: any) => {
                 if (file) {
                   setFile(file)
