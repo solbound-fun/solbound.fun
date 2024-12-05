@@ -258,6 +258,7 @@ export default function Home() {
                           setShowMiningModal(true)
                           startMining()
                         }}
+                        disabled={false}
                         text="Mine Your Coin"
                       />
                     ) : (
@@ -629,6 +630,7 @@ export default function Home() {
                     onClick={() => {
                       stopMiningRef.current = true
                     }}
+                    disabled={false}
                     text="Stop Mining"
                   />
                 </div>
