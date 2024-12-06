@@ -32,19 +32,22 @@ export const MobileUi = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex flex-col gap-3 text-white font-semibold">
-                  <div className="flex flex-row gap-4">
+                  <div className="flex text-white font-bold flex-row gap-4">
                     <img src="/ax-left.png" alt="logo" width={50} height={42} />
-                    Mine your own token address through solbound.fun!
+                    Mine your soul-bound memecoin at solbound.fun.
                     <br />
                     Go to PC or web.
                   </div>
-                  <div className="text-gray-300">
-                    You can customize your solana token address through our
-                    service. We provide service through PC or web.
+                  <div className="text-gray-300 gap-1 flex flex-col">
+                    Launch your own soul-bound memecoin with a customized token
+                    address using our service.
+                    <div className="text-cyan-500 font-bold">
+                      Note: Our service is not available on mobile.
+                    </div>
                   </div>
 
                   <button onClick={() => setClose(true)}>
-                    <ActionButton text="Ok, I want to explore first." />
+                    <ActionButton text="OK, I want to explore first." />
                   </button>
                 </div>
               </div>
