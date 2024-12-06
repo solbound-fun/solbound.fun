@@ -21,6 +21,7 @@ import { StopButton } from '@/components/button/stop-button'
 import { TwitterLogoSvg } from '@/components/svg/twitter-logo-svg'
 import { GithubLogoSvg } from '@/components/svg/github-logo-svg'
 import { FEE_PERCENT } from '@/constants/fee'
+import { MobileUi } from '@/components/mobile-ui'
 
 export default function Home() {
   const [mount, setMount] = React.useState(false)
@@ -204,8 +205,8 @@ export default function Home() {
 
   return (
     <>
-      <div className="flex md:hidden text-3xl text-white items-center justify-center h-[600px] text-center">
-        Mobile is not supported yet
+      <div className="flex md:hidden">
+        <MobileUi />
       </div>
       <div className="hidden flex-col w-full items-center md:flex">
         {showBuyModal ? (
