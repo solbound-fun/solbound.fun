@@ -7,7 +7,7 @@ import { font } from '@/pages/_app'
 
 const ActionButton = ({ text }: { text: string }) => {
   return (
-    <div className="relative w-[290px] h-12 bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a] text-center items-center justify-center">
+    <div className="w-full relative h-12 bg-[#00c4e5] rounded-[20px] border-2 border-[#3a3a3a] text-center items-center justify-center">
       <svg
         width="285"
         height="26"
@@ -132,7 +132,7 @@ export const MobileUi = () => {
             <TriangleDownSvg className="w-3 h-3" />
           </div>
 
-          <div className="flex mt-2">
+          <div className="flex mt-2 w-full">
             <ActionButton text="Mine Your Coin" />
           </div>
         </div>
