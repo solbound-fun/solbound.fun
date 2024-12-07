@@ -25,7 +25,7 @@ export const MobileUi = () => {
         <>
           {createPortal(
             <div
-              className={`flex items-center justify-center  fixed inset-0 bg-black bg-opacity-50 z-[1000] backdrop-blur-sm px-4 sm:px-0 ${font.className} tracking-wide`}
+              className={`lex md:hidden flex items-center justify-center  fixed inset-0 bg-black bg-opacity-50 z-[1000] backdrop-blur-sm px-4 sm:px-0 ${font.className} tracking-wide`}
             >
               <div
                 className="w-[326px] text-sm px-6 py-6 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-8 flex"
