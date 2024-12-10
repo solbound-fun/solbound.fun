@@ -220,7 +220,7 @@ export default function Home() {
                   className="relative w-[604px] h-full max-h-[360px] px-8 py-9 bg-gray-600 rounded-3xl shadow backdrop-blur-[20px] flex-col justify-start items-start gap-12 flex"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="absolute top-[238px] right-8 tracking-wide text-white">
+                  <div className="absolute top-[230px] right-8 tracking-wide text-white">
                     The fee will be {FEE_PERCENT}% of the tokens received.
                   </div>
                   <div className="flex flex-col gap-12">
